@@ -334,3 +334,86 @@ class Program
     }
 }
 ```
+## Dapper vs MSTest
+```
+Install-Package Dapper
+Install-Package MSTest.TestFramework
+Install-Package MSTest.TestAdapter
+```
+
+# Dapper Service class
+```
+using System.Data.SqlClient;
+using Dapper;
+
+public class UserRepository
+{
+    private readonly string _connectionString;
+
+    public UserRepository(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public User GetUserById(int id)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+            return connection.QuerySingleOrDefault<User>("SELECT * FROM Users WHERE Id = @Id", new { Id = id });
+        }
+    }
+}
+
+public class User
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+```
+
+## Unit Testing with MSTest
+```
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class UserRepositoryTests
+{
+    private UserRepository _userRepository;
+    private string _connectionString = "YourConnectionStringHere"; // Update with your connection string
+
+    [TestInitialize]
+    public void Setup()
+    {
+        _userRepository = new UserRepository(_connectionString);
+    }
+
+    [TestMethod]
+    public void GetUserById_ValidId_ReturnsUser()
+    {
+        // Arrange
+        int userId = 1; // Assuming a user with ID 1 exists in the database
+        
+        // Act
+        var user = _userRepository.GetUserById(userId);
+
+        // Assert
+        Assert.IsNotNull(user);
+        Assert.AreEqual(userId, user.Id);
+    }
+
+    [TestMethod]
+    public void GetUserById_InvalidId_ReturnsNull()
+    {
+        // Arrange
+        int userId = 999; // Assuming no user with ID 999 exists in the database
+        
+        // Act
+        var user = _userRepository.GetUserById(userId);
+
+        // Assert
+        Assert.IsNull(user);
+    }
+}
+```
