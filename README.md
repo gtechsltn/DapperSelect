@@ -1129,6 +1129,54 @@ public async Task ExampleUsage()
 }
 ```
 
+## Dapper and Solr
+```
+// Install-Package Dapper
+// Install-Package Newtonsoft.Json
+
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+
+public class SolrIndexer
+{
+    private readonly HttpClient _httpClient;
+    private readonly string _solrUrl;
+
+    public SolrIndexer(string solrUrl)
+    {
+        _httpClient = new HttpClient();
+        _solrUrl = solrUrl;
+    }
+
+    public async Task IndexUsersAsync(IEnumerable<User> users)
+    {
+        var json = JsonConvert.SerializeObject(new { add = new { doc = users } });
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync($"{_solrUrl}/update?commit=true", content);
+        response.EnsureSuccessStatusCode();
+    }
+}
+
+public async Task IndexUsersInSolr()
+{
+    var userRepository = new UserRepository("YourConnectionStringHere");
+    var solrIndexer = new SolrIndexer("http://localhost:8983/solr/YourCollectionName");
+
+    var users = await userRepository.GetAllUsersAsync();
+    await solrIndexer.IndexUsersAsync(users);
+}
+
+public async Task ExampleUsage()
+{
+    await IndexUsersInSolr();
+    Console.WriteLine("Users indexed in Solr successfully.");
+}
+```
+
 # References
 
 https://workik.com/
