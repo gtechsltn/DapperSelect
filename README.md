@@ -417,3 +417,106 @@ public class UserRepositoryTests
     }
 }
 ```
+
+## Integration Testing
+```
+Install-Package Dapper
+Install-Package MSTest.TestFramework
+Install-Package MSTest.TestAdapter
+Install-Package Microsoft.Data.SqlClient (or System.Data.SqlClient)
+```
+
+```
+using System.Data.SqlClient;
+using Dapper;
+
+public class UserRepository
+{
+    private readonly string _connectionString;
+
+    public UserRepository(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public User GetUserById(int id)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+            return connection.QuerySingleOrDefault<User>("SELECT * FROM Users WHERE Id = @Id", new { Id = id });
+        }
+    }
+
+    public void AddUser(User user)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+            string insertQuery = "INSERT INTO Users (Name, Age) VALUES (@Name, @Age)";
+            connection.Execute(insertQuery, user);
+        }
+    }
+}
+
+public class User
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+```
+
+```
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+
+[TestClass]
+public class UserRepositoryIntegrationTests
+{
+    private UserRepository _userRepository;
+    private string _connectionString = "YourConnectionStringHere"; // Update with your connection string
+
+    [TestInitialize]
+    public void Setup()
+    {
+        _userRepository = new UserRepository(_connectionString);
+
+        // Clean up the Users table before each test
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+            connection.Execute("DELETE FROM Users");
+        }
+    }
+
+    [TestMethod]
+    public void AddUser_UserIsAddedSuccessfully()
+    {
+        // Arrange
+        var newUser = new User { Name = "Alice Smith", Age = 28 };
+
+        // Act
+        _userRepository.AddUser(newUser);
+        var retrievedUser = _userRepository.GetUserById(newUser.Id);
+
+        // Assert
+        Assert.IsNotNull(retrievedUser);
+        Assert.AreEqual(newUser.Name, retrievedUser.Name);
+        Assert.AreEqual(newUser.Age, retrievedUser.Age);
+    }
+
+    [TestMethod]
+    public void GetUserById_UserDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        int nonExistentUserId = 999; // Assuming this user ID doesn't exist
+
+        // Act
+        var user = _userRepository.GetUserById(nonExistentUserId);
+
+        // Assert
+        Assert.IsNull(user);
+    }
+}
+```
