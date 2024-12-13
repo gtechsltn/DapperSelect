@@ -188,3 +188,149 @@ public Int64 Create(ActiveFilter activefilter)
     }
 }
 ```
+
+## Dapper Transaction
+```
+using System;
+using System.Data.SqlClient;
+using Dapper;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        string connectionString = "YourConnectionStringHere"; // Update with your connection string
+
+        using (var connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+
+            using (var transaction = connection.BeginTransaction())
+            {
+                try
+                {
+                    // First Query
+                    string insertQuery1 = "INSERT INTO Users (Name, Age) VALUES (@Name, @Age)";
+                    connection.Execute(insertQuery1, new { Name = "John Doe", Age = 30 }, transaction);
+
+                    // Second Query
+                    string insertQuery2 = "INSERT INTO Users (Name, Age) VALUES (@Name, @Age)";
+                    connection.Execute(insertQuery2, new { Name = "Jane Doe", Age = 25 }, transaction);
+
+                    // Commit transaction
+                    transaction.Commit();
+                    Console.WriteLine("Transaction committed successfully.");
+                }
+                catch (Exception ex)
+                {
+                    // Rollback transaction
+                    transaction.Rollback();
+                    Console.WriteLine($"Transaction rolled back. Error: {ex.Message}");
+                }
+            }
+        }
+    }
+}
+```
+
+## Stored Procedure
+```
+CREATE PROCEDURE GetUserById
+    @Id INT
+AS
+BEGIN
+    SELECT * FROM Users WHERE Id = @Id
+END
+```
+
+## Dapper vs Stored Procedure
+```
+using System;
+using System.Data;
+using System.Data.SqlClient;
+using Dapper;
+
+class Program
+{
+    public class User
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Age { get; set; }
+    }
+
+    static void Main(string[] args)
+    {
+        string connectionString = "YourConnectionStringHere"; // Update with your connection string
+
+        using (var connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+
+            // Define the parameter for the stored procedure
+            var parameters = new { Id = 1 }; // Change the ID as needed
+
+            // Call the stored procedure
+            var user = connection.QuerySingleOrDefault<User>("GetUserById", parameters, commandType: CommandType.StoredProcedure);
+
+            if (user != null)
+            {
+                Console.WriteLine($"User Found: {user.Name}, Age: {user.Age}");
+            }
+            else
+            {
+                Console.WriteLine("User not found.");
+            }
+        }
+    }
+}
+```
+
+## Dapper TransactionScope MultipleActiveResultSets
+```
+using System;
+using System.Data.SqlClient;
+using System.Transactions;
+using Dapper;
+
+class Program
+{
+    public class User
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Age { get; set; }
+    }
+
+    static void Main(string[] args)
+    {
+        string connectionString = "Server=YourServer;Database=YourDatabase;User Id=YourUsername;Password=YourPassword;MultipleActiveResultSets=True;";
+
+        using (var transactionScope = new TransactionScope())
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                // Example: Insert a new user
+                var newUser = new User { Name = "Alice Smith", Age = 28 };
+                string insertQuery = "INSERT INTO Users (Name, Age) VALUES (@Name, @Age)";
+                connection.Execute(insertQuery, newUser);
+
+                // Example: Retrieve users
+                string selectQuery = "SELECT * FROM Users";
+                var users = connection.Query<User>(selectQuery);
+
+                Console.WriteLine("Users in Database:");
+                foreach (var user in users)
+                {
+                    Console.WriteLine($"Id: {user.Id}, Name: {user.Name}, Age: {user.Age}");
+                }
+
+                // Complete the transaction
+                transactionScope.Complete();
+            }
+        }
+    }
+}
+```
