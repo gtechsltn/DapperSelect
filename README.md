@@ -8,6 +8,7 @@ Install-Package Dapper.Contrib
 Install-Package Humanier
 Install-Package NodaTime
 Install-Package CsvHelper
+Install-Package Refit
 ```
 
 ## Connection String for .NET Framework
