@@ -25,14 +25,13 @@ Install-Package Refit
 </configuration>
 ```
 
-## Connection String for .NET Core
+## Connection String for .NET Core (appsettings.json)
 ```
-<?xml version="1.0" encoding="utf-8" ?>
-<configuration>
-  <connectionStrings>
-    <add name="DefaultConnection" connectionString="Data Source=.;Initial Catalog=mssql;Integrated Security=SSPI;Connect Timeout=30;Pooling=True;Max Pool Size=10;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=true;" />
-  </connectionStrings>
-</configuration>
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=.;Initial Catalog=mssql;Integrated Security=SSPI;Connect Timeout=30;Pooling=True;Max Pool Size=10;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=true;"
+  },
+}
 ```
 
 ## Log4Net Configuration
