@@ -345,7 +345,7 @@ Install-Package MSTest.TestFramework
 Install-Package MSTest.TestAdapter
 ```
 
-# Dapper Service class
+## Dapper Service class
 ```
 using System.Data.SqlClient;
 using Dapper;
@@ -422,7 +422,7 @@ public class UserRepositoryTests
 }
 ```
 
-## Integration Testing
+## Dapper Integration Testing
 ```
 Install-Package Dapper
 Install-Package MSTest.TestFramework
@@ -1128,3 +1128,7 @@ public async Task ExampleUsage()
     Console.WriteLine("Users inserted successfully.");
 }
 ```
+
+# References
+
+https://workik.com/
