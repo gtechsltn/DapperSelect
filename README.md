@@ -520,3 +520,265 @@ public class UserRepositoryIntegrationTests
     }
 }
 ```
+
+## Dapper's Stored Procedure
+
+```
+CREATE PROCEDURE GetUsersAndOrders
+AS
+BEGIN
+    SELECT * FROM Users; -- First result set
+    SELECT * FROM Orders; -- Second result set
+END
+```
+
+## Dapper's QueryMultiple
+```
+using System;
+using System.Data.SqlClient;
+using Dapper;
+using System.Collections.Generic;
+
+public class User
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+
+public class Order
+{
+    public int OrderId { get; set; }
+    public int UserId { get; set; }
+    public string Product { get; set; }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        string connectionString = "YourConnectionStringHere"; // Update with your connection string
+
+        using (var connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+
+            // Execute the stored procedure
+            using (var multi = connection.QueryMultiple("GetUsersAndOrders", commandType: System.Data.CommandType.StoredProcedure))
+            {
+                // Get the first result set (Users)
+                var users = multi.Read<User>().AsList();
+
+                Console.WriteLine("Users:");
+                foreach (var user in users)
+                {
+                    Console.WriteLine($"Id: {user.Id}, Name: {user.Name}, Age: {user.Age}");
+                }
+
+                // Move to the next result set (Orders)
+                var orders = multi.Read<Order>().AsList();
+
+                Console.WriteLine("\nOrders:");
+                foreach (var order in orders)
+                {
+                    Console.WriteLine($"OrderId: {order.OrderId}, UserId: {order.UserId}, Product: {order.Product}");
+                }
+            }
+        }
+    }
+}
+```
+
+## SQL Scripts
+```
+-- ====================================================================================================
+-- CREATE NEW TABLE activefilter
+IF NOT EXISTS (
+		SELECT *
+		FROM sys.tables
+		WHERE [name] = 'activefilter'
+		)
+BEGIN
+	CREATE TABLE [dbo].[activefilter] (
+		[ID] [bigint] PRIMARY KEY IDENTITY(1, 1) NOT NULL
+		,[AFName] [nvarchar](255) NULL
+		,[AFType] [smallint] NOT NULL
+		,[Description] [nvarchar](255) NULL
+		,[Created] [datetime] NOT NULL
+		,[CreatedBy] [uniqueidentifier] NOT NULL
+		,[Updated] [datetime] NOT NULL
+		,[UpdatedBy] [uniqueidentifier] NOT NULL
+		,[Deleted] [datetime] NULL
+		,[DeletedBy] [uniqueidentifier] NULL
+		)
+END
+GO
+
+-- ====================================================================================================
+-- CREATE NEW COLUMN UserSettingJsonString
+IF COL_LENGTH('dbo.activefilter', 'UserSettingJsonString') IS NULL
+BEGIN
+	-- Column Does Not Exists
+	ALTER TABLE dbo.activefilter ADD UserSettingJsonString NVARCHAR(MAX) NULL
+END
+GO
+
+-- ====================================================================================================
+IF EXISTS (
+		SELECT *
+		FROM sys.objects
+		WHERE object_id = OBJECT_ID(N'common_SetDescription')
+			AND type IN (
+				N'P'
+				,N'PC'
+				)
+		)
+	DROP PROCEDURE [dbo].[common_SetDescription]
+GO
+
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[common_SetDescription] @tableName NVARCHAR(255)
+	,@columnName NVARCHAR(255) = NULL
+	,@objectDescription NVARCHAR(255)
+AS
+BEGIN
+	IF (@columnName IS NULL)
+	BEGIN
+		IF NOT EXISTS (
+				SELECT 1
+				FROM fn_listextendedproperty(NULL, 'user', 'dbo', 'table', DEFAULT, NULL, NULL)
+				WHERE OBJNAME = @tableName
+				)
+		BEGIN
+			EXECUTE sp_addextendedproperty 'MY_DESCRIPTION'
+				,@objectDescription
+				,'user'
+				,dbo
+				,'table'
+				,@tableName
+				,DEFAULT
+				,NULL
+		END
+		ELSE
+		BEGIN
+			EXECUTE sp_updateextendedproperty 'MY_DESCRIPTION'
+				,@objectDescription
+				,'user'
+				,dbo
+				,'table'
+				,@tableName
+				,DEFAULT
+				,NULL
+		END
+	END
+	ELSE
+	BEGIN
+		IF NOT EXISTS (
+				SELECT 1
+				FROM sys.extended_properties AS ep
+				INNER JOIN sys.tables AS t
+					ON ep.major_id = t.object_id
+				INNER JOIN sys.columns AS c
+					ON ep.major_id = c.object_id
+						AND ep.minor_id = c.column_id
+				WHERE class = 1
+					AND T.NAME = @tableName
+					AND C.name = @columnName
+				)
+		BEGIN
+			EXECUTE sp_addextendedproperty 'MS_Description'
+				,@objectDescription
+				,'user'
+				,dbo
+				,'table'
+				,@tableName
+				,'column'
+				,@columnName
+		END
+		ELSE
+		BEGIN
+			EXECUTE sp_updateextendedproperty 'MS_Description'
+				,@objectDescription
+				,'user'
+				,dbo
+				,'table'
+				,@tableName
+				,'column'
+				,@columnName
+		END
+	END
+END
+GO
+
+-- ====================================================================================================
+EXEC [dbo].[common_SetDescription] @tableName = N'activefilter'
+	,@columnName = N'AFType'
+	,@objectDescription = N'1: Personal, 2: Global, 3: Recent Folder, 4: Save Search, 5: Welcome Screen'
+GO
+
+-- ====================================================================================================
+IF EXISTS (
+		SELECT *
+		FROM sys.objects
+		WHERE object_id = OBJECT_ID(N'activefilter_Insert')
+			AND type IN (
+				N'P'
+				,N'PC'
+				)
+		)
+	DROP PROCEDURE [dbo].[activefilter_Insert]
+GO
+
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+CREATE PROCEDURE [dbo].[activefilter_Insert] (
+	@ID BIGINT OUT
+	,@AFName NVARCHAR(255)
+	,@AFType SMALLINT
+	,@Description NVARCHAR(255)
+	,@Created DATETIME
+	,@CreatedBy UNIQUEIDENTIFIER
+	,@Updated DATETIME
+	,@UpdatedBy UNIQUEIDENTIFIER
+	,@Deleted DATETIME
+	,@DeletedBy UNIQUEIDENTIFIER
+	,@UserSettingJsonString NVARCHAR(max)
+	)
+AS
+BEGIN
+	INSERT INTO [activefilter] (
+		 [AFName]
+		,[AFType]
+		,[Description]
+		,[Created]
+		,[CreatedBy]
+		,[Updated]
+		,[UpdatedBy]
+		,[Deleted]
+		,[DeletedBy]
+		,[UserSettingJsonString]
+		)
+	VALUES (
+		 @AFName
+		,@AFType
+		,@Description
+		,@Created
+		,@CreatedBy
+		,@Updated
+		,@UpdatedBy
+		,@Deleted
+		,@DeletedBy
+		,@UserSettingJsonString
+		)
+	
+	SET @ID = SCOPE_IDENTITY()
+END
+GO
+```
