@@ -1049,3 +1049,82 @@ public async Task ExampleUsage()
     Console.WriteLine("User deleted.");
 }
 ```
+
+## Dapper Bulk Insert
+```
+
+public class User
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Dapper;
+using System.Threading.Tasks;
+
+public class UserRepository
+{
+    private readonly string _connectionString;
+
+    public UserRepository(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public async Task BulkInsertUsersAsync(IEnumerable<User> users)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+
+            // Create a temporary table to facilitate bulk insert
+            var createTempTableSql = @"
+                CREATE TABLE #TempUsers (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    Name NVARCHAR(100),
+                    Age INT
+                );";
+
+            await connection.ExecuteAsync(createTempTableSql);
+
+            // Insert into the temporary table
+            var insertSql = @"
+                INSERT INTO #TempUsers (Name, Age)
+                VALUES (@Name, @Age);";
+
+            await connection.ExecuteAsync(insertSql, users);
+
+            // Optionally, insert from the temporary table to the main Users table
+            var bulkInsertSql = @"
+                INSERT INTO Users (Name, Age)
+                SELECT Name, Age FROM #TempUsers;";
+
+            await connection.ExecuteAsync(bulkInsertSql);
+
+            // Drop the temporary table
+            var dropTempTableSql = "DROP TABLE #TempUsers;";
+            await connection.ExecuteAsync(dropTempTableSql);
+        }
+    }
+}
+
+public async Task ExampleUsage()
+{
+    var repository = new UserRepository("YourConnectionStringHere");
+
+    // Create a list of users to be inserted
+    var users = new List<User>
+    {
+        new User { Name = "Alice Smith", Age = 28 },
+        new User { Name = "Bob Johnson", Age = 34 },
+        new User { Name = "Charlie Brown", Age = 22 }
+    };
+
+    // Perform the bulk insert
+    await repository.BulkInsertUsersAsync(users);
+    Console.WriteLine("Users inserted successfully.");
+}
+```
