@@ -1,10 +1,14 @@
 # Dapper Select: Dapper Get SQL Select To Dynamic Type
 
+https://www.freecodecamp.org/news/use-dapper-in-your-dotnet-projects/
+
 ## Nuget Packages
 ```
 Install-Package log4net
 Install-Package Newtonsoft.Json
+Install-Package Dapper
 Install-Package Dapper.Contrib
+Install-Package Dapper.SqlBuilder
 Install-Package Humanier
 Install-Package NodaTime
 Install-Package CsvHelper
@@ -781,4 +785,163 @@ BEGIN
 	SET @ID = SCOPE_IDENTITY()
 END
 GO
+```
+
+## Dapper.SqlBuilder
+```
+SqlBuilder AddParameters(dynamic parameters);
+SqlBuilder Select(string sql, dynamic parameters = null);
+SqlBuilder Where(string sql, dynamic parameters = null);
+SqlBuilder OrWhere(string sql, dynamic parameters = null);
+SqlBuilder OrderBy(string sql, dynamic parameters = null);
+SqlBuilder GroupBy(string sql, dynamic parameters = null);
+SqlBuilder Having(string sql, dynamic parameters = null);
+SqlBuilder Set(string sql, dynamic parameters = null);
+SqlBuilder Join(string sql, dynamic parameters = null);
+SqlBuilder InnerJoin(string sql, dynamic parameters = null);
+SqlBuilder LeftJoin(string sql, dynamic parameters = null);
+SqlBuilder RightJoin(string sql, dynamic parameters = null);
+SqlBuilder Intersect(string sql, dynamic parameters = null);
+```
+
+## Dapper and ASP.NET Core
+
+### UserRepository.cs
+```
+// Repositories/UserRepository.cs
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Dapper;
+using System.Threading.Tasks;
+
+public class UserRepository
+{
+    private readonly string _connectionString;
+
+    public UserRepository(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public async Task<IEnumerable<User>> GetAllUsersAsync()
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            return await connection.QueryAsync<User>("SELECT * FROM Users");
+        }
+    }
+
+    public async Task<User> GetUserByIdAsync(int id)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            return await connection.QuerySingleOrDefaultAsync<User>("SELECT * FROM Users WHERE Id = @Id", new { Id = id });
+        }
+    }
+
+    public async Task AddUserAsync(User user)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            await connection.ExecuteAsync("INSERT INTO Users (Name, Age) VALUES (@Name, @Age)", user);
+        }
+    }
+}
+```
+
+### UsersController.cs
+```
+// Controllers/UsersController.cs
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+[Route("api/[controller]")]
+[ApiController]
+public class UsersController : ControllerBase
+{
+    private readonly UserRepository _userRepository;
+
+    public UsersController(UserRepository userRepository)
+    {
+        _userRepository = userRepository;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+    {
+        var users = await _userRepository.GetAllUsersAsync();
+        return Ok(users);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<User>> GetUser(int id)
+    {
+        var user = await _userRepository.GetUserByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        return Ok(user);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> CreateUser(User user)
+    {
+        await _userRepository.AddUserAsync(user);
+        return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+    }
+}
+```
+
+## Dapper Paging
+```
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Dapper;
+using System.Threading.Tasks;
+
+public class UserRepository
+{
+    private readonly string _connectionString;
+
+    public UserRepository(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public async Task<IEnumerable<User>> GetPagedUsersAsync(int pageNumber, int pageSize)
+    {
+        var offset = (pageNumber - 1) * pageSize;
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            var sql = "SELECT * FROM Users ORDER BY Id OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+            return await connection.QueryAsync<User>(sql, new { Offset = offset, PageSize = pageSize });
+        }
+    }
+}
+```
+
+## Dapper Paging Usage
+```
+public async Task ExampleUsage()
+{
+    var repository = new UserRepository("YourConnectionStringHere");
+
+    // Get the first page with 10 users per page
+    var pageNumber = 1;
+    var pageSize = 10;
+    var pagedUsers = await repository.GetPagedUsersAsync(pageNumber, pageSize);
+
+    foreach (var user in pagedUsers)
+    {
+        Console.WriteLine($"Id: {user.Id}, Name: {user.Name}, Age: {user.Age}");
+    }
+}
 ```
