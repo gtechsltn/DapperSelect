@@ -945,3 +945,107 @@ public async Task ExampleUsage()
     }
 }
 ```
+
+## Dapper.Contrib
+```
+using Dapper.Contrib.Extensions;
+
+[Table("Users")]
+public class User
+{
+    [Key]
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Dapper.Contrib.Extensions;
+using System.Threading.Tasks;
+
+public class UserRepository
+{
+    private readonly string _connectionString;
+
+    public UserRepository(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public async Task<long> AddUserAsync(User user)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            return await connection.InsertAsync(user);
+        }
+    }
+
+    public async Task<User> GetUserByIdAsync(int id)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            return await connection.GetAsync<User>(id);
+        }
+    }
+
+    public async Task<IEnumerable<User>> GetAllUsersAsync()
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            return await connection.GetAllAsync<User>();
+        }
+    }
+
+    public async Task<bool> UpdateUserAsync(User user)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            return await connection.UpdateAsync(user);
+        }
+    }
+
+    public async Task<bool> DeleteUserAsync(int id)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            var user = await GetUserByIdAsync(id);
+            return await connection.DeleteAsync(user);
+        }
+    }
+}
+public async Task ExampleUsage()
+{
+    var repository = new UserRepository("YourConnectionStringHere");
+
+    // Create a new user
+    var newUser = new User { Name = "Alice Smith", Age = 28 };
+    var userId = await repository.AddUserAsync(newUser);
+    Console.WriteLine($"Inserted User ID: {userId}");
+
+    // Get a user by ID
+    var user = await repository.GetUserByIdAsync((int)userId);
+    Console.WriteLine($"User Retrieved: {user.Name}, Age: {user.Age}");
+
+    // Update the user
+    user.Age = 29;
+    await repository.UpdateUserAsync(user);
+    Console.WriteLine($"User Updated: {user.Name}, New Age: {user.Age}");
+
+    // Get all users
+    var allUsers = await repository.GetAllUsersAsync();
+    Console.WriteLine("All Users:");
+    foreach (var u in allUsers)
+    {
+        Console.WriteLine($"Id: {u.Id}, Name: {u.Name}, Age: {u.Age}");
+    }
+
+    // Delete the user
+    await repository.DeleteUserAsync((int)userId);
+    Console.WriteLine("User deleted.");
+}
+```
