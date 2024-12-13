@@ -1,6 +1,6 @@
 # Dapper Select: Dapper Get SQL Select To Dynamic Type
 
-# Nuget Packages
+## Nuget Packages
 ```
 Install-Package log4net
 Install-Package Newtonsoft.Json
@@ -74,7 +74,7 @@ Install-Package CsvHelper
 </configuration>
 ```
 
-# Program.cs
+## Program.cs
 ```
 class Program
 {
@@ -135,7 +135,7 @@ public static class DataReaderExtensions
 }
 ```
 
-## CRUD
+## CRUD Samples
 ```
 using System;
 using System.Collections.Generic;
