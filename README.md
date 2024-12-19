@@ -10,7 +10,11 @@ https://www.codeproject.com/Articles/745217/Auto-Generate-Code-CRUD-for-3-Layere
 
 ## Generate Data Access Layer + CRUD Stored Procedures (like as the SSMS Tools Pack)
 
-https://github.com/gtechsltn/GenCodeCrudFromTable 
+https://github.com/gtechsltn/GenCodeCrudFromTable
+
++ ApexSQL Complete
++ [SSMS Tools Pack](https://ssmstoolspack.com/Features?f=12)
++ SQL Complete
 
 ## Nuget Packages
 ```
