@@ -8,7 +8,9 @@ https://www.freecodecamp.org/news/use-dapper-in-your-dotnet-projects/
 
 https://www.codeproject.com/Articles/745217/Auto-Generate-Code-CRUD-for-3-Layered-architecture
 
-https://github.com/gtechsltn/GenCodeCrudFromTable
+## Generate Data Access Layer + CRUD Stored Procedures (like as the SSMS Tools Pack)
+
+https://github.com/gtechsltn/GenCodeCrudFromTable 
 
 ## Nuget Packages
 ```
