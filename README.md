@@ -2,16 +2,22 @@
 
 ## Dapper and ADO.NET
 
-https://www.freecodecamp.org/news/use-dapper-in-your-dotnet-projects/
++ https://cmake.org/
++ https://www.freecodecamp.org/news/use-dapper-in-your-dotnet-projects/
+
+## Generate high-quality C# clean architecture code to accelerate production
++ https://medium.com/@rmgkvp/generate-high-quality-c-clean-architecture-code-to-accelerate-production-f6bd63c0790d
++ https://github.com/tcj2001/Clean_Architecture_Program_Generator_for_CSharp_and_NET6
++ https://github.com/gtechsltn/Clean_Architecture_Program_Generator_for_CSharp_and_NET6
 
 ## Auto Generate Code (CRUD) for 3 Layered architecture (Entity, Data Access & Business Layer) with Stored Procedures based on table design
-
-https://www.codeproject.com/Articles/745217/Auto-Generate-Code-CRUD-for-3-Layered-architecture
++ https://www.codeproject.com/Articles/745217/Auto-Generate-Code-CRUD-for-3-Layered-architecture
++ https://www.c-sharpcorner.com/UploadFile/4d9083/create-and-implement-3-tier-architecture-in-Asp-Net/
 
 ## Generate Data Access Layer + CRUD Stored Procedures (like as the SSMS Tools Pack)
++ https://github.com/gtechsltn/GenCodeCrudFromTable
 
-https://github.com/gtechsltn/GenCodeCrudFromTable
-
+## Other tools
 + ApexSQL Complete
 + [SSMS Tools Pack](https://ssmstoolspack.com/Features?f=12)
 + SQL Complete
