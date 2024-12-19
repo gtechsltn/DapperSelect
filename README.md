@@ -1,14 +1,23 @@
 # Dapper Select: Dapper Get SQL Select To Dynamic Type
 
 ## Dapper and ADO.NET
++ ASP.NET Maker
++ ASP Maker
++ JSP Maker
++ PHP Maker
 
 + https://cmake.org/
++ https://aspnetmaker.dev/
 + https://www.freecodecamp.org/news/use-dapper-in-your-dotnet-projects/
+
+## Code Generator
++ https://github.com/gtechsltn/Clean_Architecture_Program_Generator_for_CSharp_and_NET6
++ https://github.com/gtechsltn/CleanArchitectureProgramGenerator
++ https://github.com/gtechsltn/OoplesFinance.StockIndicators
 
 ## Generate high-quality C# clean architecture code to accelerate production
 + https://medium.com/@rmgkvp/generate-high-quality-c-clean-architecture-code-to-accelerate-production-f6bd63c0790d
 + https://github.com/tcj2001/Clean_Architecture_Program_Generator_for_CSharp_and_NET6
-+ https://github.com/gtechsltn/Clean_Architecture_Program_Generator_for_CSharp_and_NET6
 
 ## Auto Generate Code (CRUD) for 3 Layered architecture (Entity, Data Access & Business Layer) with Stored Procedures based on table design
 + https://www.codeproject.com/Articles/745217/Auto-Generate-Code-CRUD-for-3-Layered-architecture
