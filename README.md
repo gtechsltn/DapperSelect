@@ -1,6 +1,14 @@
 # Dapper Select: Dapper Get SQL Select To Dynamic Type
 
+## Dapper and ADO.NET
+
 https://www.freecodecamp.org/news/use-dapper-in-your-dotnet-projects/
+
+## Auto Generate Code (CRUD) for 3 Layered architecture (Entity, Data Access & Business Layer) with Stored Procedures based on table design
+
+https://www.codeproject.com/Articles/745217/Auto-Generate-Code-CRUD-for-3-Layered-architecture
+
+https://github.com/gtechsltn/GenCodeCrudFromTable
 
 ## Nuget Packages
 ```
